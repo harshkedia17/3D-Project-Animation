@@ -2,18 +2,23 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/orbitcontrols';
 
 export class controls{
-    constructor(model,animationMap,mixer,currentState,camera,orbit){
-        this.model=model;
+    constructor(models,animationMap,mixers,currentStates,camera,orbit){
+        this.models=models;
         this.animationMap=animationMap;
-        this.currentState=currentState;
-        this.mixer=mixer;
+        this.currentStates=currentStates;
+        this.mixers=mixers;
         this.animationMap.forEach((value,key)=>{
-            if(key==this.currentState){
-                value.play();
+            if(key==this.currentStates[0]){
+                value[0].play();
             }
+            if(key==this.currentStates[1]){
+                value[1].play();}
         })
-        this.shift=false;
-        this.keys=['W','A','S','D'];
+        this.shifts=[false,false];
+        this.keys=[['w','a','s','d'],['arrowup'
+            ,'arrowleft'
+            ,'arrowdown'
+            ,'arrowright']];
         this.fadeDuration=0.2;
         this.camera=camera;
         this.orbit=orbit;
@@ -25,38 +30,43 @@ export class controls{
         this.runSpeed=5;
     }
 
-    toggleShift(){
-        this.shift=!this.shift;
+    toggleShift(code){
+        if(code == 'ShiftLeft')
+        this.shifts[0]=!this.shifts[0];
+        else{
+            this.shifts[1]=!this.shifts[1];
+        }
     }
-    update(delta,keyPressed) {
-        const iskeyPressed=this.keys.some(key=>{
+    update(delta,keyPressed,i) {
+        const iskeyPressed=this.keys[i].some(key=>{
             if(keyPressed[key]){
                 return true;
             }
         })
         let play="";
-        if(iskeyPressed && this.shift) play="Run";
+        if(iskeyPressed && this.shifts[i]) play="Run";
         else if(iskeyPressed) play="Walk";
         else play="Idle";
 
-        if(this.currentState != play){
+        if(this.currentStates[i] != play){
             const next=this.animationMap.get(play);
-            const prev=this.animationMap.get(this.currentState);
+            const prev=this.animationMap.get(this.currentStates[i]);
 
-            prev.fadeOut(this.fadeDuration);
-            next.reset().fadeIn(this.fadeDuration).play();
-            this.currentState=play;
+            prev[i].fadeOut(this.fadeDuration);
+            next[i].reset().fadeIn(this.fadeDuration).play();
+            // console.log(next);
+            this.currentStates[i]=play;
         }
-        this.mixer.update(delta);
+        this.mixers[i].update(delta);
 
-        if(this.currentState == 'Walk' || this.currentState == 'Run'){
+        if(this.currentStates[i] == 'Walk' || this.currentStates[i] == 'Run'){
             const Ycameradirection =Math.atan2(
-                this.camera.position.x-this.model.position.x,
-                this.camera.position.y-this.model.position.y
+                this.camera.position.x-this.models[i].position.x,
+                this.camera.position.y-this.models[i].position.y
             )
-            const directionOffset=this.directionOffSet(keyPressed);
+            const directionOffset=this.directionOffSet(keyPressed,i);
             this.rotateQuarternion.setFromAxisAngle(this.rotateAngle,Ycameradirection+directionOffset); // x y z w coordinate
-            this.model.quaternion.rotateTowards(this.rotateQuarternion,2); 
+            this.models[i].quaternion.rotateTowards(this.rotateQuarternion,2); 
 
             this.camera.getWorldDirection(this.walkDirection)
             this.walkDirection.y = 0
@@ -64,52 +74,50 @@ export class controls{
             this.walkDirection.applyAxisAngle(this.rotateAngle, directionOffset)
     
 
-            const speed=this.currentState == 'Run' ? this.runSpeed :this.walkSpeed;
+            const speed=this.currentStates[i] == 'Run' ? this.runSpeed :this.walkSpeed;
 
                 const moveX=this.walkDirection.x*speed*delta;
                 const movez=this.walkDirection.z*speed*delta;
-                console.log("movex"+moveX)
-                console.log("movez"+movez)
-                this.model.position.x +=moveX;
-                this.model.position.z +=movez;
-                this.moveCamera(moveX,movez);
+                this.models[i].position.x +=moveX;
+                this.models[i].position.z +=movez;
+                // this.moveCamera(moveX,movez,i);
         }
     }
 
-    moveCamera(x,z){
+    moveCamera(x,z,i){
         this.camera.position.x +=x;
         this.camera.position.z +=z;
 
-        this.cameraTarget.x = this.model.position.x
-        this.cameraTarget.y = this.model.position.y + 1
-        this.cameraTarget.z = this.model.position.z
+        this.cameraTarget.x = this.models[i].position.x
+        this.cameraTarget.y = this.models[i].position.y + 1
+        this.cameraTarget.z = this.models[i].position.z
         this.orbit.target = this.cameraTarget
     }
 
-    directionOffSet(keyPressed){
+    directionOffSet(keyPressed,i){
         var direction=0; 
         
-        if(keyPressed['W']){
-            if(keyPressed['A']){
+        if(keyPressed[this.keys[i][0]]){
+            if(keyPressed[this.keys[i][1]]){
                 direction=Math.PI/4;
             }
-            else if(keyPressed['D']){
+            else if(keyPressed[this.keys[i][3]]){
                 direction=-Math.PI/4
             }
         }
-        else if(keyPressed['S']){
-            if(keyPressed['A']){
+        else if(keyPressed[this.keys[i][2]]){
+            if(keyPressed[this.keys[i][1]]){
                 direction=Math.PI/4+Math.PI/2;
             }
-            else if(keyPressed['D']){
+            else if(keyPressed[this.keys[i][3]]){
                 direction=-Math.PI/4-Math.PI/2
             }
             else{
                 direction=Math.PI;
             }
         }
-        else if(keyPressed['A']) direction=Math.PI/2;
-        else if(keyPressed['D']) direction=-Math.PI/2;
+        else if(keyPressed[this.keys[i][1]]) direction=Math.PI/2;
+        else if(keyPressed[this.keys[i][3]]) direction=-Math.PI/2;
         return direction;
     }
 }
