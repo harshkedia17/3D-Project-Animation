@@ -4,14 +4,19 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { controls } from './movement';
 import road from '../img/desert.jpg'
 import * as skeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js'
+
+//renderer
 const renderer=new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth,window.innerHeight);
 
 document.body.appendChild(renderer.domElement);
 
+// Scene and camera
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,1000);
 camera.position.set(0,10,20);
+
+//orbit Contols
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 orbitControls.update();
 
@@ -19,6 +24,7 @@ orbitControls.update();
 const textureLoader=new THREE.TextureLoader();
 scene.background=textureLoader.load(road);
 
+//Plane
 const plane=new THREE.Mesh(
     new THREE.PlaneGeometry(100,100),
     new THREE.MeshStandardMaterial({map:textureLoader.load(road),
@@ -28,6 +34,8 @@ scene.add(new THREE.AmbientLight('white'));
 plane.rotateX(-Math.PI/2)
 scene.add(plane);
 
+
+//Model Loader
 const loader=new GLTFLoader();
 let contols;
 const url=new URL('../model/Soldier.glb',import.meta.url);
@@ -37,7 +45,6 @@ loader.load(url.href,(gltf)=>{
     clone1.position.set(-1,0,0)
     const clone2=skeletonUtils.clone(model)
     clone2.position.set(1,0,0)
-    // scene.add(model);
     scene.add(clone1);
     scene.add(clone2);
 
@@ -53,15 +60,13 @@ loader.load(url.href,(gltf)=>{
     contols=new controls([clone1,clone2],animationMap,[mixer1,mixer2],['Idle','Idle'],camera,orbitControls);
 })
 
-const keyPressed={}
 
+const keyPressed={}
 window.addEventListener('keydown',(e)=>{
     if(e.shiftKey && controls){
-        // console.log(e.code)
         contols.toggleShift(e.code);
     }
     else{
-        // console.log(e.key.toLowerCase());
         keyPressed[e.key.toLowerCase()]=true;
     }
 })
@@ -71,6 +76,8 @@ window.addEventListener('keyup',(e)=>{
 })
 
 const clock=new THREE.Clock();
+
+//Animate Function
 function animate(){
     const time=clock.getDelta();
     if(contols){
@@ -80,6 +87,7 @@ function animate(){
 }
 renderer.setAnimationLoop(animate);
 
+//resize 
 window.addEventListener('resize',()=>{
     camera.aspect=window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();

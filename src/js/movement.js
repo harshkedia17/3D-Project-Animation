@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/orbitcontrols';
 
 export class controls{
+
     constructor(models,animationMap,mixers,currentStates,camera,orbit){
         this.models=models;
         this.animationMap=animationMap;
@@ -37,6 +38,7 @@ export class controls{
             this.shifts[1]=!this.shifts[1];
         }
     }
+
     update(delta,keyPressed,i) {
         const iskeyPressed=this.keys[i].some(key=>{
             if(keyPressed[key]){
@@ -54,7 +56,6 @@ export class controls{
 
             prev[i].fadeOut(this.fadeDuration);
             next[i].reset().fadeIn(this.fadeDuration).play();
-            // console.log(next);
             this.currentStates[i]=play;
         }
         this.mixers[i].update(delta);
@@ -80,7 +81,7 @@ export class controls{
                 const movez=this.walkDirection.z*speed*delta;
                 this.models[i].position.x +=moveX;
                 this.models[i].position.z +=movez;
-                // this.moveCamera(moveX,movez,i);
+                this.moveCamera(moveX,movez,i);
         }
     }
 
