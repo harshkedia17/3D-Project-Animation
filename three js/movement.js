@@ -1,9 +1,10 @@
-import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/orbitcontrols';
+import * as THREE from '../node_modules/three/build/three.module.js'
+// import { OrbitControls } from 'three/examples/jsm/controls/orbitcontrols';
 
 export class controls{
 
     constructor(models,animationMap,mixers,currentStates,camera,orbit){
+        console.log('cons')
         this.models=models;
         this.animationMap=animationMap;
         this.currentStates=currentStates;
@@ -32,6 +33,7 @@ export class controls{
     }
 
     toggleShift(code){
+        console.log('shift')
         if(code == 'ShiftLeft')
         this.shifts[0]=!this.shifts[0];
         else{
@@ -40,6 +42,7 @@ export class controls{
     }
 
     update(delta,keyPressed,i) {
+        console.log('key')
         const iskeyPressed=this.keys[i].some(key=>{
             if(keyPressed[key]){
                 return true;

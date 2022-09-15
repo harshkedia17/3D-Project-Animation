@@ -1,13 +1,15 @@
-import * as THREE from 'three';
-import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
-import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { controls } from './movement';
-import road from '../img/desert.jpg'
-import * as skeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js'
+import * as THREE from '../node_modules/three/build/three.module.js';
+import {OrbitControls} from '../node_modules/three/examples/jsm/controls/OrbitControls.js'
+import {GLTFLoader} from '../node_modules/three/examples/jsm/loaders/GLTFLoader.js'
+import { controls } from './movement.js';
+import './movement.js';
+import desert from '../img/desert.jpg'
+import * as skeletonUtils from '../node_modules/three/examples/jsm/utils/SkeletonUtils.js'
 
 //renderer
 const renderer=new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.shadowMap.enabled=true;
 
 document.body.appendChild(renderer.domElement);
 
@@ -22,16 +24,17 @@ orbitControls.update();
 
 
 const textureLoader=new THREE.TextureLoader();
-scene.background=textureLoader.load(road);
+scene.background=textureLoader.load(desert);
 
 //Plane
 const plane=new THREE.Mesh(
     new THREE.PlaneGeometry(100,100),
-    new THREE.MeshStandardMaterial({map:textureLoader.load(road),
+    new THREE.MeshStandardMaterial({map:textureLoader.load(desert),
+        side:THREE.DoubleSide
     })
 )
-scene.add(new THREE.AmbientLight('white'));
 plane.rotateX(-Math.PI/2)
+plane.receiveShadow=true;
 scene.add(plane);
 
 
@@ -40,7 +43,9 @@ const loader=new GLTFLoader();
 let contols;
 const url=new URL('../model/Soldier.glb',import.meta.url);
 loader.load(url.href,(gltf)=>{
+    console.log('call')
     const model=gltf.scene;
+    model.traverse(obj=>{obj.castShadow=true;})
     const clone1=skeletonUtils.clone(model)
     clone1.position.set(-1,0,0)
     const clone2=skeletonUtils.clone(model)
@@ -70,12 +75,26 @@ window.addEventListener('keydown',(e)=>{
         keyPressed[e.key.toLowerCase()]=true;
     }
 })
+console.log('hello')
 
 window.addEventListener('keyup',(e)=>{
     keyPressed[e.key.toLowerCase()]=false;
 })
 
 const clock=new THREE.Clock();
+
+// lights
+const directionLight=new THREE.DirectionalLight('white',1);
+directionLight.castShadow=true;
+directionLight.position.set(0,40,40);
+directionLight.shadow.camera.left=50
+directionLight.shadow.camera.right=-50
+directionLight.shadow.camera.top=50
+directionLight.shadow.camera.bottom=-50
+directionLight.shadow.mapSize.width = 4096;
+directionLight.shadow.mapSize.height = 4096;
+scene.add(directionLight);
+scene.add(new THREE.AmbientLight('white',0.5))
 
 //Animate Function
 function animate(){
